@@ -1,5 +1,8 @@
 const express = require('express');
 const history = require('connect-history-api-fallback');
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
 const app = express();
 const PORT = 80;
 
@@ -11,4 +14,16 @@ app.use(history({
 }));
 app.use(staticFileMiddleware);
 
-app.listen(PORT, () => console.log("[Server] Listening on Port " + PORT + "..."));
+const httpServer = http.createServer(app);
+const httpsServer = https.createServer({
+    key: fs.readFileSync('/etc/letsencrypt/live/www.teachertoolbox.tk/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/www.teachertoolbox.tk/fullchain.pem'),
+}, app);
+
+httpServer.listen(80, () => {
+    console.log('HTTP Server running on port 80');
+});
+
+httpsServer.listen(443, () => {
+    console.log('HTTPS Server running on port 443');
+});
