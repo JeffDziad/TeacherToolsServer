@@ -20,6 +20,11 @@ const httpsServer = https.createServer({
     cert: fs.readFileSync('/etc/letsencrypt/live/www.teachertoolbox.tk/fullchain.pem'),
 }, app);
 
+app.post('/timeline/submission', (req, res) => {
+    console.log(req.body);
+    res.send("Timeline submission received!");
+})
+
 httpServer.listen(80, () => {
     console.log('HTTP Server running on port 80');
 });
