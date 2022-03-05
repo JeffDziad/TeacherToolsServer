@@ -4,7 +4,8 @@ const https = require('https');
 const http = require('http');
 const fs = require('fs');
 const app = express();
-const PORT = 80;
+const HTTP_PORT = 80;
+const HTTPS_PORT = 443;
 
 const staticFileMiddleware = express.static(__dirname + '/www/dist/');
 app.use(staticFileMiddleware);
@@ -25,10 +26,10 @@ app.post('/timeline/submission', (req, res) => {
     res.send("Timeline submission received!");
 })
 
-httpServer.listen(80, () => {
+httpServer.listen(HTTP_PORT, () => {
     console.log('HTTP Server running on port 80');
 });
 
-httpsServer.listen(443, () => {
+httpsServer.listen(HTTPS_PORT, () => {
     console.log('HTTPS Server running on port 443');
 });
