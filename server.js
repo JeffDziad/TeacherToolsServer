@@ -1,3 +1,11 @@
+// Database
+const admin = require('firebase-admin');
+const sa = require('PATH/TO/.JSON');
+admin.initializeApp({
+    credential: admin.credential.cert(sa)
+});
+const db = admin.firestore();
+
 const express = require('express');
 const history = require('connect-history-api-fallback');
 const https = require('https');
@@ -6,6 +14,7 @@ const fs = require('fs');
 const app = express();
 const HTTP_PORT = 80;
 const HTTPS_PORT = 443;
+const uuid = require('uuid');
 
 const staticFileMiddleware = express.static(__dirname + '/www/dist/');
 app.use(staticFileMiddleware);
@@ -23,11 +32,47 @@ const httpsServer = https.createServer({
     cert: fs.readFileSync('/etc/letsencrypt/live/www.teachertoolbox.tk/fullchain.pem'),
 }, app);
 
-app.post('/timeline/submission', (req, res) => {
+class TimelineSubmission {
+    constructor(username, answers) {
+        this.sid = uuid.v4();
+        this.username = username;
+        this.answers = answers;
+    }
+}
+
+app.post('/timeline/submission', async (req, res) => {
+    let uid = req.body.uid;
     let tid = req.body.tid;
     let answers = req.body.answers;
-    console.log(answers);
-    res.send("Timeline submission received!");
+    let username = req.body.username;
+    let match = false;
+    await db.collection('users').doc(uid)
+        .collection('tools').doc(tid)
+        .collection('submissions').get()
+        .then(function(snapshot) {
+            snapshot.forEach(function(doc) {
+                let d = doc.data();
+                if(d.username.toUpperCase() === username.toUpperCase()) match = true;
+            });
+        })
+        .catch(() => {
+            res.status(500).send('Something went wrong while submitting your attempt! Please try again later.');
+        })
+    if(!match) {
+        // Username is unique.
+        await db.collection('users').doc(uid)
+            .collection('tools').doc(tid)
+            .collection('submissions').add(new TimelineSubmission(username, answers))
+            .then(() => {
+                res.status(201).send('Successfully submitted your attempt!');
+            })
+            .catch(() => {
+                res.status(500).send('Something went wrong while submitting your attempt! Please try again later.');
+            });
+    } else {
+        // Username is not unique.
+        res.status(406).send('Username already used. Please choose another.');
+    }
 })
 
 httpServer.listen(HTTP_PORT, () => {
