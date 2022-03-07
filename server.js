@@ -22,7 +22,7 @@ const httpsServer = https.createServer({
 }, app);
 
 app.post('/timeline/submission', (req, res) => {
-    console.log(req.body);
+    console.log(req);
     res.send("Timeline submission received!");
 })
 
