@@ -24,7 +24,9 @@ const httpsServer = https.createServer({
 }, app);
 
 app.post('/timeline/submission', (req, res) => {
-    console.log(req.body);
+    let tid = req.body.tid;
+    let answers = req.body.answers;
+    console.log(answers);
     res.send("Timeline submission received!");
 })
 
