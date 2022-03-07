@@ -1,5 +1,4 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const history = require('connect-history-api-fallback');
 const https = require('https');
 const http = require('http');
@@ -8,8 +7,6 @@ const app = express();
 const HTTP_PORT = 80;
 const HTTPS_PORT = 443;
 
-const jsonParser = bodyParser.json();
-
 const staticFileMiddleware = express.static(__dirname + '/www/dist/');
 app.use(staticFileMiddleware);
 app.use(history({
@@ -17,6 +14,8 @@ app.use(history({
     verbose: true
 }));
 app.use(staticFileMiddleware);
+app.use(express.json());
+app.use(express.urlencoded());
 
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer({
@@ -24,7 +23,7 @@ const httpsServer = https.createServer({
     cert: fs.readFileSync('/etc/letsencrypt/live/www.teachertoolbox.tk/fullchain.pem'),
 }, app);
 
-app.post('/timeline/submission', jsonParser, (req, res) => {
+app.post('/timeline/submission', (req, res) => {
     console.log(req.body);
     res.send("Timeline submission received!");
 })
