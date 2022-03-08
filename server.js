@@ -60,6 +60,7 @@ app.post('/timeline/submission', async (req, res) => {
         })
     if(!match) {
         // Username is unique.
+        let score = await scoreTimeline(uid, tid, answers);
         await db.collection('users').doc(uid)
             .collection('tools').doc(tid)
             .collection('submissions').add(JSON.parse(JSON.stringify(new TimelineSubmission(username, answers))))
@@ -82,3 +83,43 @@ httpServer.listen(HTTP_PORT, () => {
 httpsServer.listen(HTTPS_PORT, () => {
     console.log('HTTPS Server running on port 443');
 });
+
+async function scoreTimeline(uid, tid, answers) {
+    let score = 0;
+    let index = 0;
+    let timelineRef = db.collection('users').doc(uid)
+        .collection('tools').doc(tid);
+    timelineRef.get().then((doc) => {
+       let data = doc.data();
+       let points = data.points;
+       points.forEach((point) => {
+           if(getConvertedDate(point.month, point.day, point.year) === answers[0].date) score++;
+           index++;
+       });
+    });
+    return score;
+}
+
+function getMonthFromString(mon){
+    let d = Date.parse(mon + "1, 2012");
+    if(!isNaN(d)){
+        return new Date(d).getMonth();
+    }
+    return -1;
+}
+
+function getConvertedDate(month, day, year) {
+    let date;
+    if(day !== "None") {
+        // month, day, and year are present
+        date = new Date(parseInt(year), getMonthFromString(month), parseInt(day));
+    } else if(month !== "None") {
+        // month, and year present
+        date = new Date(parseInt(year), getMonthFromString(month));
+    } else {
+        // just year present
+        date = new Date(parseInt(year), 0);
+    }
+    return date;
+}
+
