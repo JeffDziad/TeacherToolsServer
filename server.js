@@ -62,7 +62,7 @@ app.post('/timeline/submission', async (req, res) => {
         // Username is unique.
         await db.collection('users').doc(uid)
             .collection('tools').doc(tid)
-            .collection('submissions').add(new TimelineSubmission(username, answers))
+            .collection('submissions').add(JSON.parse(JSON.stringify(new TimelineSubmission(username, answers))))
             .then(() => {
                 res.status(201).send('Successfully submitted your attempt!');
             })
