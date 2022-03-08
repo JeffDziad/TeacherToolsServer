@@ -56,7 +56,7 @@ app.post('/timeline/submission', async (req, res) => {
             });
         })
         .catch(() => {
-            res.status(500).send('Something went wrong while submitting your attempt! Please try again later.');
+            res.send('Something went wrong while submitting your attempt! Please try again later.');
         })
     if(!match) {
         // Username is unique.
@@ -64,14 +64,14 @@ app.post('/timeline/submission', async (req, res) => {
             .collection('tools').doc(tid)
             .collection('submissions').add(JSON.parse(JSON.stringify(new TimelineSubmission(username, answers))))
             .then(() => {
-                res.status(201).send('Successfully submitted your attempt!');
+                res.send('Successfully submitted your attempt!');
             })
             .catch(() => {
-                res.status(500).send('Something went wrong while submitting your attempt! Please try again later.');
+                res.send('Something went wrong while submitting your attempt! Please try again later.');
             });
     } else {
         // Username is not unique.
-        res.status(406).send('Username already used. Please choose another.');
+        res.send('Username already used. Please choose another.');
     }
 })
 
