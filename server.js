@@ -49,18 +49,19 @@ app.post('/timeline/submission', async (req, res) => {
     await db.collection('users').doc(uid)
         .collection('tools').doc(tid)
         .collection('submissions').get()
-        .then(function(snapshot) {
-            snapshot.forEach(function(doc) {
+        .then(function (snapshot) {
+            snapshot.forEach(function (doc) {
                 let d = doc.data();
-                if(d.username.toUpperCase() === username.toUpperCase()) match = true;
+                if (d.username.toUpperCase() === username.toUpperCase()) match = true;
             });
         })
         .catch(() => {
             res.send('Something went wrong while submitting your attempt! Please try again later.');
         })
-    if(!match) {
+    if (!match) {
         // Username is unique.
         let score = await scoreTimeline(uid, tid, answers);
+        console.log("SENDING SCORE: ", score);
         await db.collection('users').doc(uid)
             .collection('tools').doc(tid)
             .collection('submissions').add(JSON.parse(JSON.stringify(new TimelineSubmission(username, answers))))
@@ -85,24 +86,29 @@ httpsServer.listen(HTTPS_PORT, () => {
 });
 
 async function scoreTimeline(uid, tid, answers) {
-    let score = 0;
+    let scored = [];
     let index = 0;
     let timelineRef = db.collection('users').doc(uid)
         .collection('tools').doc(tid);
     timelineRef.get().then((doc) => {
-       let data = doc.data();
-       let points = data.points;
-       points.forEach((point) => {
-           if(getConvertedDate(point.month, point.day, point.year) === answers[0].date) score++;
-           index++;
-       });
+        let data = doc.data();
+        let points = data.points;
+        points.forEach((point) => {
+            console.log("Checking: " + getConvertedDate(point.month, point.day, point.year) + " and " + answers[0].date);
+            if (getConvertedDate(point.month, point.day, point.year) === answers[index].date) {
+                scored.push({ correct: true, id: point.id });
+            } else {
+                scored.push({ correct: false, id: point.id });
+            }
+            index++;
+        });
     });
-    return score;
+    return scored;
 }
 
-function getMonthFromString(mon){
+function getMonthFromString(mon) {
     let d = Date.parse(mon + "1, 2012");
-    if(!isNaN(d)){
+    if (!isNaN(d)) {
         return new Date(d).getMonth();
     }
     return -1;
@@ -110,10 +116,10 @@ function getMonthFromString(mon){
 
 function getConvertedDate(month, day, year) {
     let date;
-    if(day !== "None") {
+    if (day !== "None") {
         // month, day, and year are present
         date = new Date(parseInt(year), getMonthFromString(month), parseInt(day));
-    } else if(month !== "None") {
+    } else if (month !== "None") {
         // month, and year present
         date = new Date(parseInt(year), getMonthFromString(month));
     } else {
